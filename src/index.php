@@ -1,7 +1,6 @@
 <?php
 
-//$headers = getallheaders();
-//$auth = $headers['Authorization'];
+// Mika Rinne ORACLE
 
 $token = $_POST['token'];
 $host = $_POST['host'];
@@ -104,7 +103,12 @@ function recycle($auth, $host, $deployment, $containers, $filter)
       throw new Exception("Timeout");
     }
   }
-  return "All recycled";
+  if($filter)
+  {
+    return "All " . $filter . " recycled.\n";
+  } else {
+      return "All recycled.\n";
+  }
 }
 
 function getDeployments($auth, $host)
