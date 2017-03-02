@@ -10,7 +10,7 @@ $filter = $_POST['filter'];
 if(!$token || !$host || !$deployment)
 {
   http_response_code(400);
-  echo "Please use POST parameters: authorization host deployment [filter]";
+  echo "Please use POST parameters: authorization host deployment [filter]\n";
   exit;
 }
 $auth = 'Bearer ' . $token;
@@ -105,9 +105,9 @@ function recycle($auth, $host, $deployment, $containers, $filter)
   }
   if($filter)
   {
-    return "All " . $filter . " recycled.\n";
+    return "All " . $filter . " recycled.";
   } else {
-      return "All recycled.\n";
+      return "All recycled.";
   }
 }
 
