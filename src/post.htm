@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OCCS rolling updates REST API</title>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.css">
+<link rel="stylesheet" type="text/css" href="css/main.css">
+<link rel="stylesheet" type="text/css" href="css/navbar.css">
+
+</head>
+<body>
+
+		<!-- Fixed navbar -->
+	  <nav class="navbar navbar-fixed-top grey">
+	    <div class="container">
+	      <div class="navbar-header">
+	        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+	          <span class="sr-only">Toggle navigation</span>
+	          <span class="icon-bar"></span>
+	          <span class="icon-bar"></span>
+	          <span class="icon-bar"></span>
+	        </button>
+	        <a class="navbar-brand" href="/#/"><img src="/oracle-logo.png"></a></a>
+	      </div>
+	    </div>
+	  </nav>
+
+    <div class="container">
+      <blockquote>
+        OCCS rolling updates REST API  - test form
+      </blockquote>
+      <p>
+      <h3>Settings for REST</h3>
+      <br>
+
+      <p>
+      <div class="col-8 col-md-6 pull-md-4 bd-content">
+        <form action="/" method="POST">
+          <div class="form-group">
+            <label for="host">-F "host"</label>
+            <input class="form-control" type="text" id="host" name="host">
+            <small class="form-text text-muted">OCCS service admin node IP address</small>
+          </div>
+          <br>
+          <div class="form-group">
+            <label for="token">-F "token"</label>
+            <input class="form-control" type="text" id="token" name="token">
+            <small class="form-text text-muted">OCCS service My Profile API Token</small>
+          </div>
+          <br>
+          <div class="form-group">
+            <label for="deployment">-F "deployment"</label>
+            <input class="form-control" type="text" id="deployment" name="deployment">
+            <small class="form-text text-muted">Deployment name, can be partial</small>
+          </div>
+          <br>
+          <div class="form-group">
+            <label for="filter">-F "filter"</label>
+            <input class="form-control" type="text" id="filter" name="filter">
+            <small class="form-text text-muted">To filter containers e.g. backend</small>
+          </div>
+          <p>
+          <br>
+          <button class="btn btn-success" type="submit" value="setup"> RUN </button>
+        </form>
+      </div>
+    </div>
+
+	<script src="https://code.jquery.com/jquery-2.1.3.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.js"></script>
+</body>
+</html>
