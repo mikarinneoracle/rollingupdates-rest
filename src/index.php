@@ -5,14 +5,25 @@
 $token = $_POST['token'];
 $host = $_POST['host'];
 $deployment = $_POST['deployment'];
+$backendName = $_POST['backendname'];
 $filter = $_POST['filter'];
 
-if(!$token || !$host || !$deployment)
+if(!$token || !$host || !$deployment || !$backendName)
+{
+  $token = $argv[1];
+  $host = $argv[2];
+  $deployment = $argv[3];
+  $backendName = $argv[4];
+  $filter = $argv[5];
+}
+
+if(!$token || !$host || !$deployment || !$backendName)
 {
   http_response_code(400);
-  echo "Please use POST parameters: authorization host deployment [filter]\n";
+  echo "Please use POST parameters: authorization host deployment backendname [filter]\n";
   exit;
 }
+
 $auth = 'Bearer ' . $token;
 
 try {
@@ -40,7 +51,7 @@ try {
       http_response_code(404);
       echo "No containers found.\n";
     } else {
-      $ret = recycle($auth, $host, $foundDeployment, $containers, $filter);
+      $ret = recycle($auth, $host, $foundDeployment, $containers, $filter, $backendName);
       echo $ret . "\n";
     }
   }
@@ -49,7 +60,7 @@ try {
    echo $e->getMessage() . "\n";
 }
 
-function recycle($auth, $host, $deployment, $containers, $filter)
+function recycle($auth, $host, $deployment, $containers, $filter, $backendName)
 {
   $filteredContainers = array();
   if($filter)
@@ -68,6 +79,10 @@ function recycle($auth, $host, $deployment, $containers, $filter)
   foreach($filteredContainers as $container)
   {
     $recycled = false;
+    echo "Disable haproxy for " . $container['container_id'] . "\n";
+    haproxyCmd($backendName, $container['container_id'], 'disable');
+    sleep(5);
+    echo "Kill container " . $container['container_id'] . "\n";
     killContainer($auth, $host, $container['container_id']);
     $i = 0;
     while(!$recycled && $i < 20) // EXIT AFTER 1 minute FOR SAFETY
@@ -166,9 +181,17 @@ function getContainers($auth, $host, $deployment)
   }
 }
 
+function haproxyCmd($backendName, $container, $oper)
+{
+  $cmd = 'echo "' . $oper . ' server ' . $backendName . '/' . $container . '"  | /usr/bin/nc -U /tmp/haproxy';
+  echo $cmd . "\n";
+  $resp = shell_exec($cmd);
+  echo $resp . "\n";
+  return $resp;
+}
+
 function killContainer($auth, $host, $container)
 {
-
   $curl = curl_init();
   $headers = ['Authorization: ' . $auth ];
 
