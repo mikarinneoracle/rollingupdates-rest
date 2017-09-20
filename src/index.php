@@ -5,10 +5,11 @@
 $token = $_POST['token'];
 $host = $_POST['host'];
 $deployment = $_POST['deployment'];
-$backendName = $_POST['backendname'];
-$filter = $_POST['filter'];
+$backendName = $_POST['backendname'] ? $_POST['backendname'] : '';
+$filter = $_POST['filter'] ? $_POST['filter'] : '';
 
-if(!$token || !$host || !$deployment || !$backendName)
+// For testing cmdline
+if(!$token || !$host || !$deployment)
 {
   $token = $argv[1];
   $host = $argv[2];
@@ -17,10 +18,10 @@ if(!$token || !$host || !$deployment || !$backendName)
   $filter = $argv[5];
 }
 
-if(!$token || !$host || !$deployment || !$backendName)
+if(!$token || !$host || !$deployment)
 {
   http_response_code(400);
-  echo "Please use POST parameters: authorization host deployment backendname [filter]\n";
+  echo "Please use POST parameters: authorization host deployment [backendname] [filter]\n";
   exit;
 }
 
@@ -79,9 +80,12 @@ function recycle($auth, $host, $deployment, $containers, $filter, $backendName)
   foreach($filteredContainers as $container)
   {
     $recycled = false;
-    echo "Disable haproxy for " . $container['container_id'] . "\n";
-    haproxyCmd($backendName, $container['container_id'], 'disable');
-    sleep(5);
+    if($backendName)
+    {
+        echo "Disable haproxy for " . $container['container_id'] . "\n";
+        haproxyCmd($backendName, $container['container_id'], 'disable');
+        sleep(5);
+    }
     echo "Kill container " . $container['container_id'] . "\n";
     killContainer($auth, $host, $container['container_id']);
     $i = 0;
@@ -184,9 +188,14 @@ function getContainers($auth, $host, $deployment)
 function haproxyCmd($backendName, $container, $oper)
 {
   $cmd = 'echo "' . $oper . ' server ' . $backendName . '/' . $container . '"  | /usr/bin/nc -U /tmp/haproxy';
-  echo $cmd . "\n";
   $resp = shell_exec($cmd);
-  echo $resp . "\n";
+  if($resp)
+  {
+      echo $cmd . "\n";
+      echo $resp . "\n";
+  } else {
+      echo "No response\n";
+  }
   return $resp;
 }
 
