@@ -1,80 +1,41 @@
 FORMAT: 1A
 HOST: http://polls.apiblueprint.org/
 
-# Rolling updates
+# OCCS rolling updates with REST
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+Does a rolling update to OCCS deployment. This is a Docker itself that runs on a
+worked node in OCCS.
 
-## Questions Collection [/questions]
+### Redeploy [POST]
 
-### List All Questions [GET]
+Does a rolling update to OCCS deployment identified by deployment <i>name</i> and redeploys
+all nodes matching to <i>filter</i>. When filter is empty matches <i>all</i> nodes.
+Deployment name can be <i>partial</i>.
 
-+ Response 200 (application/json)
+When <i>backendName</i> is given tries to disable the node from the HAproxy backend
+pool before rolling. After rolling the backend is automatically returned to the pool.
 
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
-            }
-        ]
-
-### Create a New Question [POST]
-
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
+Client is authenticated by the <i>token</i> when it connects to OCCS admin
+identified by the given <i>host ip</i>.
 
 + Request (application/json)
 
         {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
+            "token": "security-token",
+            "host": "ip",
+            "deployment": "name",
+            "backendname": "name",
+            "filter": "filter"
         }
 
-+ Response 201 (application/json)
++ Response 200 (application/json)
 
     + Headers
 
-            Location: /questions/2
+            Location: /
 
     + Body
 
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
+                "result": "rolling update result",
             }
