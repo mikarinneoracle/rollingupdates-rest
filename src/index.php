@@ -1,12 +1,20 @@
 <?php
 
 // Mika Rinne ORACLE
-
-$token = $_POST['token'];
-$host = $_POST['host'];
-$deployment = $_POST['deployment'];
-$backendName = $_POST['backendname'] ? $_POST['backendname'] : '';
-$filter = $_POST['filter'] ? $_POST['filter'] : '';
+$contentType = $_SERVER["CONTENT_TYPE"];
+$data = [];
+if($contentType && $contentType == 'application/json')
+{
+    $data = json_decode(file_get_contents("php://input"), true);
+} else
+{
+    $data = $_POST;
+}
+$token = $data['token'];
+$host = $data['host'];
+$deployment = $data['deployment'];
+$backendName = $data['backendname'] ? $data['backendname'] : '';
+$filter = $data['filter'] ? $data['filter'] : '';
 
 // For testing cmdline
 if(!$token || !$host || !$deployment)
@@ -21,7 +29,14 @@ if(!$token || !$host || !$deployment)
 if(!$token || !$host || !$deployment)
 {
   http_response_code(400);
-  echo "Please use POST parameters: authorization host deployment [backendname] [filter]\n";
+  if($contentType && $contentType == 'application/json')
+  {
+      $ret = [];
+      $ret['error'] = "Please fill in REST parameters: authorization, host, deployment, [backendname], [filter]";
+      echo json_encode($ret, true);
+  } else {
+      echo "Please use POST parameters: authorization host deployment [backendname] [filter]\n";
+  }
   exit;
 }
 
@@ -42,7 +57,15 @@ try {
   if(!$foundDeployment)
   {
     http_response_code(404);
-    echo $deployment . " not found.\n";
+    $error = $deployment . " not found.";
+    if($contentType && $contentType == 'application/json')
+    {
+        $ret = [];
+        $ret['error'] = $error;
+        echo json_encode($ret, true);
+    } else {
+        echo $error . '\n';
+    }
   } else {
     $ret = getContainers($auth, $host, $foundDeployment);
     $obj = json_decode($ret, true);
@@ -50,15 +73,41 @@ try {
     if(count($containers) == 0)
     {
       http_response_code(404);
-      echo "No containers found.\n";
+      $error = "No containers found.";
+      if($contentType && $contentType == 'application/json')
+      {
+          $ret = [];
+          $ret['error'] = $error;
+          echo json_encode($ret, true);
+      } else {
+          echo $error . '\n';
+      }
     } else {
       $ret = recycle($auth, $host, $foundDeployment, $containers, $filter, $backendName);
-      echo $ret . "\n";
+      http_response_code(200);
+      if($contentType && $contentType == 'application/json')
+      {
+          $arr = explode("\n", $ret);
+          $resp = [];
+          $resp['response'] = $arr;
+          echo json_encode($resp, true);
+      } else {
+          echo $ret . '\n';
+      }
     }
   }
 } catch (Exception $e) {
-   http_response_code(400); // set HTTP status code BAD_REQUEST
-   echo $e->getMessage() . "\n";
+   http_response_code(408);
+   $error = $e->getMessage();
+   if($contentType && $contentType == 'application/json')
+   {
+       $ret = [];
+       $ret['error'] = $error;
+       echo json_encode($ret, true);
+   } else {
+       echo $error . '\n';
+   }
+   exit;
 }
 
 function recycle($auth, $host, $deployment, $containers, $filter, $backendName)
@@ -77,24 +126,25 @@ function recycle($auth, $host, $deployment, $containers, $filter, $backendName)
     $filteredContainers = $containers;
   }
 
+  $ret = '';
   foreach($filteredContainers as $container)
   {
     $recycled = false;
     if($backendName)
     {
-        echo "Disable haproxy for " . $container['container_id'] . "\n";
+        $ret .= "Disable haproxy for " . $container['container_id'] . "\n";
         haproxyCmd($backendName, $container['container_id'], 'disable');
         sleep(5);
     }
-    echo "Kill container " . $container['container_id'] . "\n";
+    $ret .= "Kill container " . $container['container_id'] . "\n";
     killContainer($auth, $host, $container['container_id']);
     $i = 0;
     while(!$recycled && $i < 20) // EXIT AFTER 1 minute FOR SAFETY
     {
       $i++;
       sleep(3);
-      $ret = getContainers($auth, $host, $deployment);
-      $obj = json_decode($ret, true);
+      $cons = getContainers($auth, $host, $deployment);
+      $obj = json_decode($cons, true);
       $testCont = $obj['containers'];
       $found = false;
       foreach($testCont as $tc)
@@ -119,14 +169,15 @@ function recycle($auth, $host, $deployment, $containers, $filter, $backendName)
     }
     if($i > 20)
     {
-      throw new Exception("Timeout");
+      //throw new Exception("Timeout");
+      return "Timeout";
     }
   }
   if($filter)
   {
-    return "All " . $filter . " recycled.";
+    return $ret . "All " . $filter . " recycled.";
   } else {
-      return "All recycled.";
+      return $ret . "All recycled.";
   }
 }
 
@@ -189,6 +240,7 @@ function haproxyCmd($backendName, $container, $oper)
 {
   $cmd = 'echo "' . $oper . ' server ' . $backendName . '/' . $container . '"  | /usr/bin/nc -U /tmp/haproxy';
   $resp = shell_exec($cmd);
+  /*
   if($resp)
   {
       echo $cmd . "\n";
@@ -196,6 +248,7 @@ function haproxyCmd($backendName, $container, $oper)
   } else {
       echo "No response\n";
   }
+  */
   return $resp;
 }
 
