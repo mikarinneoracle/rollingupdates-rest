@@ -12,7 +12,7 @@ standalone or on a worker node in OCCS.
 
 Does a rolling update to OCCS deployment identified by deployment <i>name</i> and redeploys
 all nodes matching to <i>filter</i>. When filter is empty matches <i>all</i> nodes.
-Deployment name needs to be <i>fully qualified</i>. Filter can be <i>partial</i>. 
+Deployment name and filter can be <i>partial</i>. 
 
 When <i>backendName</i> is given tries to disable the node from the HAproxy backend
 pool before rolling. After rolling the backend is automatically returned to the pool.
